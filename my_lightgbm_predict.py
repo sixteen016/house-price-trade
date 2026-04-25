@@ -3,7 +3,18 @@ import pandas as pd
 import numpy as np
 import re
 import joblib
-import lightgbm as lgb
+
+# LightGBM兼容性检查
+LIGHTGBM_AVAILABLE = False
+try:
+    import lightgbm as lgb
+    LIGHTGBM_AVAILABLE = True
+except OSError as e:
+    if "libgomp.so.1" in str(e):
+        print("警告: LightGBM系统依赖缺失，使用降级模式")
+        LIGHTGBM_AVAILABLE = False
+    else:
+        raise
 
 # ---------- 全局缓存 ----------
 _model = None
@@ -20,7 +31,8 @@ def _load_objects():
     """加载所有保存的模型和预处理对象（仅一次）"""
     global _model, _le, _scaler, _kmeans, _community_mean, _cluster_mean, _global_mean, _feature_names, _base_features
     if _model is None:
-        _model = lgb.Booster(model_file='lightgbm_house_price_model.txt')
+        if LIGHTGBM_AVAILABLE:
+            _model = lgb.Booster(model_file='lightgbm_house_price_model.txt')
         _le = joblib.load('lightgbm_label_encoder.pkl')
         _scaler = joblib.load('lightgbm_scaler.pkl')
         _kmeans = joblib.load('lightgbm_kmeans.pkl')
