@@ -20,15 +20,32 @@ def _load_objects():
     """加载所有保存的模型和预处理对象（仅一次）"""
     global _model, _le, _scaler, _kmeans, _community_mean, _cluster_mean, _global_mean, _feature_names, _base_features
     if _model is None:
-        _model = lgb.Booster(model_file='lightgbm_house_price_model.txt')
-        _le = joblib.load('lightgbm_label_encoder.pkl')
-        _scaler = joblib.load('lightgbm_scaler.pkl')
-        _kmeans = joblib.load('lightgbm_kmeans.pkl')
-        _community_mean = joblib.load('lightgbm_community_mean.pkl')
-        _cluster_mean = joblib.load('lightgbm_cluster_mean.pkl')
-        _global_mean = joblib.load('lightgbm_global_mean.pkl')
-        _feature_names = joblib.load('lightgbm_feature_names.pkl')
-        _base_features = joblib.load('lightgbm_base_features.pkl')
+        # 检查模型文件是否存在且可读
+        model_file = 'lightgbm_house_price_model.txt'
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(f"模型文件 {model_file} 不存在")
+        
+        # 检查文件大小（防止空文件或损坏文件）
+        file_size = os.path.getsize(model_file)
+        if file_size == 0:
+            raise ValueError(f"模型文件 {model_file} 为空文件")
+        
+        print(f"模型文件大小: {file_size} 字节")
+        
+        try:
+            _model = lgb.Booster(model_file=model_file)
+            _le = joblib.load('lightgbm_label_encoder.pkl')
+            _scaler = joblib.load('lightgbm_scaler.pkl')
+            _kmeans = joblib.load('lightgbm_kmeans.pkl')
+            _community_mean = joblib.load('lightgbm_community_mean.pkl')
+            _cluster_mean = joblib.load('lightgbm_cluster_mean.pkl')
+            _global_mean = joblib.load('lightgbm_global_mean.pkl')
+            _feature_names = joblib.load('lightgbm_feature_names.pkl')
+            _base_features = joblib.load('lightgbm_base_features.pkl')
+            print("所有模型文件加载成功")
+        except Exception as e:
+            print(f"模型加载失败: {e}")
+            raise
 
 # ---------- 辅助函数（与preprocess.py一致） ----------
 def get_room(text):
