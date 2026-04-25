@@ -16,7 +16,16 @@ def predict_page():
     return render_template('predict.html')
 
 def _adapt_frontend_data(data):
-    """适配前端发送的简化格式数据"""
+    """适配前端发送的数据（支持完整格式和简化格式）"""
+    
+    # 检查数据格式：如果是完整格式（包含'房屋户型'等字段），直接返回
+    if '房屋户型' in data or '建筑面积' in data:
+        print("检测到完整格式数据，直接使用")
+        return data
+    
+    # 如果是简化格式，进行转换
+    print("检测到简化格式数据，进行转换")
+    
     # 前端简化格式到后端完整格式的映射
     mapping = {
         'area': '建筑面积',

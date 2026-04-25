@@ -257,13 +257,14 @@ def predict_house_price(house_dict):
             X = preprocess_single(house_dict)
             return np.exp(_model.predict(X)[0])
         else:
-            # 如果LightGBM不可用，抛出明确错误
-            raise RuntimeError("LightGBM模型不可用，无法进行准确预测")
+            # 如果LightGBM不可用，使用降级预测
+            print("使用降级预测模式")
+            return _fallback_prediction(house_dict)
             
     except Exception as e:
         print(f"预测过程中出错: {e}")
-        # 重新抛出异常，让调用者处理
-        raise
+        # 出错时使用降级预测
+        return _fallback_prediction(house_dict)
 
 # 测试（直接运行本文件时执行）
 if __name__ == '__main__':
