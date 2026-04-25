@@ -18,38 +18,18 @@ except (OSError, ImportError) as e:
     else:
         raise
 
-# 降级预测函数
-def _fallback_prediction(house_dict):
-    """当LightGBM不可用时的降级预测"""
-    # 基于简单规则的基础预测
-    area = float(house_dict.get('建筑面积', '85.00㎡').replace('㎡', ''))
-    base_price = area * 0.5  # 基础单价0.5万元/平米
+# 备用预测函数（仅作为紧急备用）
+def _fallback_prediction(data):
+    """当LightGBM完全不可用时的紧急备用预测"""
+    # 简单的基于面积的预测（作为最后的手段）
+    area = data.get('area', 80)
+    base_price = area * 5000
     
-    # 房间数调整
-    room_match = re.search(r'(\d+)室', house_dict.get('房屋户型', '2室2厅1卫'))
-    room_count = int(room_match.group(1)) if room_match else 2
-    room_bonus = room_count * 0.05
+    # 添加一些基本调整
+    room_bonus = data.get('room', 2) * 20000
+    decoration_bonus = {'简装': 0, '中装': 30000, '精装': 60000, '豪装': 100000}.get(data.get('decoration', '精装'), 0)
     
-    # 装修等级调整
-    decoration_map = {'简装': 0, '中装': 0.05, '精装': 0.1, '豪装': 0.2}
-    decoration_bonus = decoration_map.get(house_dict.get('装修情况', '精装'), 0)
-    
-    # 楼层调整
-    floor_match = re.search(r'共(\d+)层', house_dict.get('所在楼层', '中楼层(共18层)'))
-    floor_count = int(floor_match.group(1)) if floor_match else 18
-    floor_bonus = floor_count * 0.001
-    
-    # 朝向调整
-    orientation_map = {'北': 0, '东': 0.01, '西': 0.005, '南': 0.015, '南北': 0.02}
-    orientation_bonus = orientation_map.get(house_dict.get('房屋朝向', '南'), 0)
-    
-    total_price = base_price * (1 + room_bonus + decoration_bonus + floor_bonus + orientation_bonus)
-    
-    # 添加随机波动使预测更真实
-    import random
-    variation = random.uniform(0.9, 1.1)  # ±10%波动
-    
-    return total_price * variation
+    return int(base_price + room_bonus + decoration_bonus)
 
 # ---------- 全局缓存 ----------
 _model = None
@@ -277,13 +257,13 @@ def predict_house_price(house_dict):
             X = preprocess_single(house_dict)
             return np.exp(_model.predict(X)[0])
         else:
-            # 使用降级预测
-            return _fallback_prediction(house_dict)
+            # 如果LightGBM不可用，抛出明确错误
+            raise RuntimeError("LightGBM模型不可用，无法进行准确预测")
             
     except Exception as e:
         print(f"预测过程中出错: {e}")
-        # 出错时使用降级预测
-        return _fallback_prediction(house_dict)
+        # 重新抛出异常，让调用者处理
+        raise
 
 # 测试（直接运行本文件时执行）
 if __name__ == '__main__':
