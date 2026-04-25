@@ -34,7 +34,7 @@ def _load_objects():
         print(f"模型文件大小: {file_size} 字节")
         
         try:
-            _model = lgb.Booster(model_file=model_file)
+            _model = joblib.load(model_file)
             _le = joblib.load('lightgbm_label_encoder.pkl')
             _scaler = joblib.load('lightgbm_scaler.pkl')
             _kmeans = joblib.load('lightgbm_kmeans.pkl')
