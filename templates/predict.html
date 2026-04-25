@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房屋估价 | AI预测系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e5e7eb;
+            --shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 50px 30px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(79, 70, 229, 0.2));
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--primary);
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            color: var(--primary);
+        }
+
+        .back-button:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateX(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            border-radius: 2px;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #f8fafc;
+            max-width: 600px;
+            margin: 0 auto;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .main-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .form-sections {
+            display: grid;
+            gap: 40px;
+        }
+
+        .form-section {
+            padding: 30px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group small {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .result-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-top: 32px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-section.visible {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .price-display {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+        }
+
+        .result-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .main-card {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header {
+                padding: 20px 0;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .price-display {
+                font-size: 42px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <button class="back-button" onclick="goBack()">
+            ← 返回首页
+        </button>
+
+        <div class="header">
+            <h1>房屋信息录入</h1>
+            <p>请填写房屋详细信息，AI系统将为您提供精准的价格预测</p>
+        </div>
+
+        <div class="main-card">
+            <form id="houseForm">
+                <div class="form-sections">
+                    <!-- 基本信息 -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">📋</div>
+                            <h2>基本信息</h2>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="小区">小区名称</label>
+                                <input type="text" id="小区" name="小区" placeholder="请输入小区名称" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="房屋户型">房屋户型</label>
+                                <input type="text" id="房屋户型" name="房屋户型" placeholder="如：2室2厅1卫" required>
+                                <small>格式：X室X厅X卫X厨</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="建筑面积">建筑面积</label>
+                                <input type="text" id="建筑面积" name="建筑面积" placeholder="如：85.00㎡" required>
+                                <small>包含单位，如：85.00㎡</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="所在楼层">所在楼层</label>
+                                <input type="text" id="所在楼层" name="所在楼层" placeholder="如：中楼层(共18层)" required>
+                                <small>格式：低/中/高楼层(共X层)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 房屋特征 -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🏗️</div>
+                            <h2>房屋特征</h2>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="房屋朝向">房屋朝向</label>
+                                <input type="text" id="房屋朝向" name="房屋朝向" placeholder="如：南" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="梯户比例">梯户比例</label>
+                                <input type="text" id="梯户比例" name="梯户比例" placeholder="如：一梯两户" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="配备电梯">配备电梯</label>
+                                <select id="配备电梯" name="配备电梯" required>
+                                    <option value="">请选择</option>
+                                    <option value="有">有</option>
+                                    <option value="无">无</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="房权所属">房权所属</label>
+                                <select id="房权所属" name="房权所属" required>
+                                    <option value="">请选择</option>
+                                    <option value="非共有">非共有</option>
+                                    <option value="共有">共有</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 建筑信息 -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🏢</div>
+                            <h2>建筑信息</h2>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="建成年代">建成年代</label>
+                                <input type="number" id="建成年代" name="建成年代" placeholder="如：2010" required min="1900" max="2030">
+                            </div>
+                            <div class="form-group">
+                                <label for="户型结构">户型结构</label>
+                                <select id="户型结构" name="户型结构" required>
+                                    <option value="">请选择</option>
+                                    <option value="平层">平层</option>
+                                    <option value="复式">复式</option>
+                                    <option value="跃层">跃层</option>
+                                    <option value="错层">错层</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="建筑类型">建筑类型</label>
+                                <select id="建筑类型" name="建筑类型" required>
+                                    <option value="">请选择</option>
+                                    <option value="板楼">板楼</option>
+                                    <option value="塔楼">塔楼</option>
+                                    <option value="板塔结合">板塔结合</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="装修情况">装修情况</label>
+                                <select id="装修情况" name="装修情况" required>
+                                    <option value="">请选择</option>
+                                    <option value="精装">精装</option>
+                                    <option value="简装">简装</option>
+                                    <option value="毛坯">毛坯</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 交易信息 -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">💼</div>
+                            <h2>交易信息</h2>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="成交周期（天）">成交周期（天）</label>
+                                <input type="number" id="成交周期（天）" name="成交周期（天）" placeholder="请输入成交周期">
+                            </div>
+                            <div class="form-group">
+                                <label for="调价（次）">调价次数</label>
+                                <input type="number" id="调价（次）" name="调价（次）" placeholder="请输入调价次数">
+                            </div>
+                            <div class="form-group">
+                                <label for="带看（次）">带看次数</label>
+                                <input type="number" id="带看（次）" name="带看（次）" placeholder="请输入带看次数">
+                            </div>
+                            <div class="form-group">
+                                <label for="关注（人）">关注人数</label>
+                                <input type="number" id="关注（人）" name="关注（人）" placeholder="请输入关注人数">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="buttons">
+                    <button type="button" class="btn btn-primary" onclick="predictPrice()">
+                        <span>🚀</span>
+                        开始预测
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="fillExample()">
+                        <span>📝</span>
+                        填充示例
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                        <span>🗑️</span>
+                        清空表单
+                    </button>
+                </div>
+            </form>
+
+            <!-- 结果展示区域 -->
+            <div class="result-section" id="resultSection">
+                <div id="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        function fillExample() {
+            // 填充示例数据
+            const exampleData = {
+                '小区': '幕府西路85号',
+                '房屋户型': '2室2厅1卫',
+                '建筑面积': '85.00㎡',
+                '所在楼层': '中楼层(共18层)',
+                '房屋朝向': '南',
+                '梯户比例': '一梯两户',
+                '配备电梯': '有',
+                '房权所属': '非共有',
+                '成交周期（天）': '30',
+                '调价（次）': '2',
+                '带看（次）': '5',
+                '关注（人）': '10',
+                '浏览（次）': '100',
+                '建成年代': '2010',
+                '户型结构': '平层',
+                '建筑类型': '板楼',
+                '装修情况': '精装',
+                '建筑结构': '钢混',
+                '交易权属': '商品房',
+                '房屋用途': '普通住宅',
+                '成交时间': '2023.01.01',
+                '挂牌时间': '2022-12-01',
+                '百度经纬': '118.8,32.1'
+            };
+
+            Object.keys(exampleData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = exampleData[key];
+                }
+            });
+            
+            // 隐藏结果区域
+            const resultSection = document.getElementById('resultSection');
+            resultSection.classList.remove('visible');
+            
+            // 显示成功提示
+            alert('示例数据已填充完成！');
+        }
+
+        function clearForm() {
+            const form = document.getElementById('houseForm');
+            const inputs = form.querySelectorAll('input, select');
+            
+            inputs.forEach(input => {
+                if (input.type === 'number') {
+                    input.value = '';
+                } else if (input.tagName === 'SELECT') {
+                    input.selectedIndex = 0;
+                } else {
+                    input.value = '';
+                }
+            });
+            
+            // 隐藏结果区域
+            const resultSection = document.getElementById('resultSection');
+            resultSection.classList.remove('visible');
+            
+            // 显示成功提示
+            alert('表单已清空！');
+        }
+
+        async function predictPrice() {
+            const form = document.getElementById('houseForm');
+            const resultSection = document.getElementById('resultSection');
+            const resultElem = document.getElementById('result');
+            
+            // 验证表单
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // 收集表单数据
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                // 处理数值字段
+                if (['成交周期（天）', '调价（次）', '带看（次）', '关注（人）', '浏览（次）', '建成年代'].includes(key)) {
+                    data[key] = parseInt(value) || 0;
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // 添加默认值（如果用户未填写）
+            data['成交周期（天）'] = data['成交周期（天）'] || 0;
+            data['调价（次）'] = data['调价（次）'] || 0;
+            data['带看（次）'] = data['带看（次）'] || 0;
+            data['关注（人）'] = data['关注（人）'] || 0;
+            data['浏览（次）'] = data['浏览（次）'] || 0;
+            data['建筑结构'] = data['建筑结构'] || '钢混';
+            data['交易权属'] = data['交易权属'] || '商品房';
+            data['房屋用途'] = data['房屋用途'] || '普通住宅';
+            data['成交时间'] = data['成交时间'] || '2023.01.01';
+            data['挂牌时间'] = data['挂牌时间'] || '2022-12-01';
+            data['百度经纬'] = data['百度经纬'] || '118.8,32.1';
+            
+            // 显示加载状态
+            resultSection.classList.add('visible');
+            resultElem.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    正在分析房屋数据...
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const price = result.price.toFixed(2);
+                    resultElem.innerHTML = `
+                        <div style="color: var(--text-secondary); font-size: 14px;">预测价格</div>
+                        <div class="price-display">${price} 万元</div>
+                        <div class="result-text">基于AI模型分析的精准估价结果</div>
+                    `;
+                } else {
+                    resultElem.innerHTML = `
+                        <div class="error">
+                            ❌ 预测失败：${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultElem.innerHTML = `
+                    <div class="error">
+                        ❌ 网络错误：${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载时显示欢迎信息
+        window.onload = function() {
+            // 可以添加一些初始化操作
+            console.log('房屋估价系统已就绪');
+        };
+    </script>
+</body>
+</html>
