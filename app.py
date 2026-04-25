@@ -91,9 +91,15 @@ def predict():
         if not data:
             return jsonify({'error': '未提供 JSON 数据'}), 400
 
+        print(f"接收到的原始数据: {data}")
+        
         # 适配前端数据格式
         adapted_data = _adapt_frontend_data(data)
+        print(f"适配后的数据: {adapted_data}")
+        
         price = predict_house.predict_house_price(adapted_data)
+        print(f"预测结果: {price}")
+        
         return jsonify({'price': price})
     except Exception as e:
         error_msg = f'预测失败: {str(e)}\n{traceback.format_exc()}'
