@@ -1,12 +1,8 @@
 [build]
 builder = "DOCKERFILE"
 
-[deploy]
-startCommand = "gunicorn --bind 0.0.0.0:$PORT app:app"
-
 [[services]]
 name = "web"
-port = 5000
 
 [env]
 FLASK_ENV = "production"

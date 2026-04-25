@@ -20,12 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制应用代码
 COPY . .
 
-# 暴露端口
-EXPOSE 5000
+# 暴露端口（使用Railway的动态端口）
+EXPOSE $PORT
 
 # 设置环境变量
 ENV FLASK_ENV=production
-ENV PORT=5000
 
-# 启动命令
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# 启动命令（使用环境变量PORT）
+CMD gunicorn --bind 0.0.0.0:$PORT app:app
