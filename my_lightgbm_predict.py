@@ -251,16 +251,8 @@ def predict_house_price(house_dict):
     """预测房价（万元）"""
     try:
         _load_objects()
-        
-        # 检查是否可以使用LightGBM模型
-        if LIGHTGBM_AVAILABLE and '_model' in globals() and _model is not None:
-            X = preprocess_single(house_dict)
-            return np.exp(_model.predict(X)[0])
-        else:
-            # 如果LightGBM不可用，使用降级预测
-            print("使用降级预测模式")
-            return _fallback_prediction(house_dict)
-            
+        X = preprocess_single(house_dict)
+        return np.exp(_model.predict(X)[0])
     except Exception as e:
         print(f"预测过程中出错: {e}")
         # 出错时使用降级预测
