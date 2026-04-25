@@ -4,6 +4,7 @@ import numpy as np
 import re
 import joblib
 import lightgbm as lgb
+import os
 
 # ---------- 全局缓存 ----------
 _model = None
