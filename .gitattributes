@@ -1,2 +1,2 @@
+lightgbm_house_price_model.txt binary
 *.pkl binary
-*.txt text eol=lf
