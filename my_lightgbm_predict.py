@@ -3,33 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 import joblib
-import os
-
-# LightGBM兼容性检查
-LIGHTGBM_AVAILABLE = False
-MODEL_LOADED = False
-try:
-    import lightgbm as lgb
-    LIGHTGBM_AVAILABLE = True
-except (OSError, ImportError) as e:
-    if "libgomp.so.1" in str(e) or "No module named 'lightgbm'" in str(e):
-        print("警告: LightGBM不可用，使用降级预测模式")
-        LIGHTGBM_AVAILABLE = False
-    else:
-        raise
-
-# 备用预测函数（仅作为紧急备用）
-def _fallback_prediction(data):
-    """当LightGBM完全不可用时的紧急备用预测"""
-    # 简单的基于面积的预测（作为最后的手段）
-    area = data.get('area', 80)
-    base_price = area * 5000
-    
-    # 添加一些基本调整
-    room_bonus = data.get('room', 2) * 20000
-    decoration_bonus = {'简装': 0, '中装': 30000, '精装': 60000, '豪装': 100000}.get(data.get('decoration', '精装'), 0)
-    
-    return int(base_price + room_bonus + decoration_bonus)
+import lightgbm as lgb
 
 # ---------- 全局缓存 ----------
 _model = None
@@ -44,13 +18,9 @@ _base_features = None
 
 def _load_objects():
     """加载所有保存的模型和预处理对象（仅一次）"""
-    global _model, _le, _scaler, _kmeans, _community_mean, _cluster_mean, _global_mean, _feature_names, _base_features, MODEL_LOADED
-    
-    if MODEL_LOADED:
-        return
-        
-    try:
-        # 尝试加载预处理对象
+    global _model, _le, _scaler, _kmeans, _community_mean, _cluster_mean, _global_mean, _feature_names, _base_features
+    if _model is None:
+        _model = lgb.Booster(model_file='lightgbm_house_price_model.txt')
         _le = joblib.load('lightgbm_label_encoder.pkl')
         _scaler = joblib.load('lightgbm_scaler.pkl')
         _kmeans = joblib.load('lightgbm_kmeans.pkl')
@@ -59,20 +29,6 @@ def _load_objects():
         _global_mean = joblib.load('lightgbm_global_mean.pkl')
         _feature_names = joblib.load('lightgbm_feature_names.pkl')
         _base_features = joblib.load('lightgbm_base_features.pkl')
-        
-        # 只有在LightGBM可用时才加载模型
-        if LIGHTGBM_AVAILABLE:
-            _model = lgb.Booster(model_file='lightgbm_house_price_model.txt')
-            print("LightGBM模型加载成功")
-        else:
-            print("使用降级预测模式")
-            
-        MODEL_LOADED = True
-        
-    except Exception as e:
-        print(f"模型加载失败: {e}")
-        print("将使用降级预测模式")
-        MODEL_LOADED = True
 
 # ---------- 辅助函数（与preprocess.py一致） ----------
 def get_room(text):
@@ -249,14 +205,9 @@ def preprocess_single(house_dict):
 
 def predict_house_price(house_dict):
     """预测房价（万元）"""
-    try:
-        _load_objects()
-        X = preprocess_single(house_dict)
-        return np.exp(_model.predict(X)[0])
-    except Exception as e:
-        print(f"预测过程中出错: {e}")
-        # 出错时使用降级预测
-        return _fallback_prediction(house_dict)
+    _load_objects()
+    X = preprocess_single(house_dict)
+    return np.exp(_model.predict(X)[0])
 
 # 测试（直接运行本文件时执行）
 if __name__ == '__main__':
